@@ -1,0 +1,35 @@
+#!/bin/bash
+
+if [ ! -d release ]
+then
+mkdir release
+fi
+
+if [ ! -d qt5-mac ]
+then
+ln -s ~/qt5-mac
+fi
+
+qtmacd="$(pwd)/qt5-mac"
+
+#lupdate unetbootin.pro
+$qtmacd/bin/lrelease unetbootin.pro
+./qmake-mac
+#sed -i '' 's/-arch i386//g' Makefile
+#sed -i '' 's/i386//g' Makefile
+make
+./fix-unetbootin-frameworkpaths.rb
+#mv unetbootin.app unetbootin-old.app
+#ditto --arch i386 unetbootin-old.app unetbootin.app
+#rm -r unetbootin-old.app
+
+revno=$(./vcs-revno)
+#zip -r unetbootin-mac-$revno.zip unetbootin.app
+#mv unetbootin-mac-$revno.zip release
+if [ -d unetbootin-mac-dmg/unetbootin.app ]
+then
+rm -rf unetbootin-mac-dmg/unetbootin.app
+fi
+cp -r unetbootin.app unetbootin-mac-dmg
+hdiutil create -volname UNetbootin -srcfolder unetbootin-mac-dmg -ov -format UDZO release/unetbootin-mac-$revno.dmg
+rm -rf unetbootin-mac-dmg/unetbootin.app
